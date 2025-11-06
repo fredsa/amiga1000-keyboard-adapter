@@ -250,7 +250,7 @@ void setup() {
   pixels.begin();
   neo_color(NEO_PURPLE);
 
-  // Set up serial.
+  // Configure serial.
   Serial.begin();
   Serial.println("Settting up...");
 
@@ -270,8 +270,132 @@ void setup() {
 }
 
 void loop() {
-  do_amiga_test_kit_keyboard_test();
-  delay(3000);
+  Serial.println("Cmd:");
+  Serial.setTimeout(100000);
+  String cmd = Serial.readStringUntil('\n');
+  if (cmd == "test") {
+    do_amiga_test_kit_keyboard_test();
+  } else {
+    for (int i = 0; i < cmd.length(); i++) {
+      sendChar(cmd[i]);
+    }
+    send_key_up_down(KEYCODE_RETURN);
+  }
+}
+
+void sendChar(char c) {
+  switch (c) {
+    case 'A':
+    case 'a':
+      send_key_up_down(KEYCODE_A);
+      break;
+    case 'B':
+    case 'b':
+      send_key_up_down(KEYCODE_B);
+      break;
+    case 'C':
+    case 'c':
+      send_key_up_down(KEYCODE_C);
+      break;
+    case 'D':
+    case 'd':
+      send_key_up_down(KEYCODE_D);
+      break;
+    case 'E':
+    case 'e':
+      send_key_up_down(KEYCODE_E);
+      break;
+    case 'F':
+    case 'f':
+      send_key_up_down(KEYCODE_F);
+      break;
+    case 'G':
+    case 'g':
+      send_key_up_down(KEYCODE_G);
+      break;
+    case 'H':
+    case 'h':
+      send_key_up_down(KEYCODE_H);
+      break;
+    case 'I':
+    case 'i':
+      send_key_up_down(KEYCODE_I);
+      break;
+    case 'J':
+    case 'j':
+      send_key_up_down(KEYCODE_J);
+      break;
+    case 'K':
+    case 'k':
+      send_key_up_down(KEYCODE_K);
+      break;
+    case 'L':
+    case 'l':
+      send_key_up_down(KEYCODE_L);
+      break;
+    case 'M':
+    case 'm':
+      send_key_up_down(KEYCODE_M);
+      break;
+    case 'N':
+    case 'n':
+      send_key_up_down(KEYCODE_N);
+      break;
+    case 'O':
+    case 'o':
+      send_key_up_down(KEYCODE_O);
+      break;
+    case 'P':
+    case 'p':
+      send_key_up_down(KEYCODE_P);
+      break;
+    case 'Q':
+    case 'q':
+      send_key_up_down(KEYCODE_Q);
+      break;
+    case 'R':
+    case 'r':
+      send_key_up_down(KEYCODE_R);
+      break;
+    case 'S':
+    case 's':
+      send_key_up_down(KEYCODE_S);
+      break;
+    case 'T':
+    case 't':
+      send_key_up_down(KEYCODE_T);
+      break;
+    case 'U':
+    case 'u':
+      send_key_up_down(KEYCODE_U);
+      break;
+    case 'V':
+    case 'v':
+      send_key_up_down(KEYCODE_V);
+      break;
+    case 'W':
+    case 'w':
+      send_key_up_down(KEYCODE_W);
+      break;
+    case 'X':
+    case 'x':
+      send_key_up_down(KEYCODE_X);
+      break;
+    case 'Y':
+    case 'y':
+      send_key_up_down(KEYCODE_Y);
+      break;
+    case 'Z':
+    case 'z':
+      send_key_up_down(KEYCODE_Z);
+      break;
+    case ' ':
+      send_key_up_down(KEYCODE_SPACEBAR);
+      break;
+    default:
+      Serial.printf("Unknown char: %c\n", c);
+      break;
+  }
 }
 
 // Amiga Test Kit 1.21
