@@ -6,11 +6,11 @@
 
 #include <Adafruit_NeoPixel.h>
 
-#define NEO_RED pixels.Color(75, 0, 0)
-#define NEO_GREEN pixels.Color(0, 75, 0)
-#define NEO_BLUE pixels.Color(0, 0, 75)
-#define NEO_PURPLE pixels.Color(75, 0, 75)
-#define NEO_YELLOW pixels.Color(75, 75, 0)
+#define NEO_RED pixels.Color(20, 0, 0)
+#define NEO_GREEN pixels.Color(0, 20, 0)
+#define NEO_BLUE pixels.Color(0, 0, 20)
+#define NEO_PURPLE pixels.Color(20, 0, 20)
+#define NEO_YELLOW pixels.Color(20, 20, 0)
 #define NEO_OFF pixels.Color(0, 0, 0)
 
 static const uint8_t KBDATA = T11;
@@ -253,6 +253,7 @@ void setup() {
   // Configure serial.
   Serial.begin();
   Serial.println("Settting up...");
+  Serial.println();
 
   // Configure digital pins.
   pinMode(KBCLK, OUTPUT);
