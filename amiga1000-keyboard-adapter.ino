@@ -374,83 +374,66 @@ static void on_usb_keyboard_detect(uint8_t usbNum, void* dev) {
   Serial.printf("desc.iProduct           = 0x%02x\n", device->iProduct);
   Serial.printf("desc.iSerialNumber      = 0x%02x\n", device->iSerialNumber);
   Serial.printf("desc.bNumConfigurations = 0x%02x\n", device->bNumConfigurations);
-  // if( device->iProduct == mySupportedIdProduct && device->iManufacturer == mySupportedManufacturer ) {
-  //   myListenUSBPort = usbNum;
-  // }
 
   if (!usb_dev_begun) {
     Serial.println("Starting USB");
     Keyboard.begin();
     USB.begin();
-
-    Serial.printf("down_keys: ");
-    for (int i = 0; i < down_keys_len; i++) {
-      Serial.printf("0x%02x ", down_keys[i]);
-    }
-    Serial.printf("\n");
   }
 }
 
 static void on_usb_keyboard_data(uint8_t usbNum, uint8_t byte_depth, uint8_t* data, uint8_t data_len) {
-  // if( myListenUSBPort != usbNum ) return;
+  // Forward data to microcontroller USB bus.
+  // Keyboard.sendReport((KeyReport*)data);
+
   Serial.printf("in: ");
   for (int k = 0; k < data_len; k++) {
     Serial.printf("0x%02x ", data[k]);
   }
   Serial.printf("\n");
-  bool left_ctrl = data[0] && 1 << 0;
-  bool left_shift = data[0] && 1 << 1;
-  bool left_alt = data[0] && 1 << 2;
-  bool left_super = data[0] && 1 << 3;
-  bool right_ctrl = data[0] && 1 << 4;
-  bool right_shift = data[0] && 1 << 5;
-  bool right_alt = data[0] && 1 << 6;
-  bool right_super = data[0] && 1 << 7;
 
-  // Filter out all modifier keys.
-  data[0] = PC_KEYCODE_NOT_A_KEY;
-  // Filter out vendor code.
-  data[1] = PC_KEYCODE_NOT_A_KEY;
-  // Prepare for sorting.
-  for (int i = 0; i < data_len; i++) {
-    if (data[i] == 0) {
-      data[i] = PC_KEYCODE_NOT_A_KEY;
+  // Populate fake PC key codes for modifier keys.
+  usb_reported[0] = (data[0] & ((1 << 0) | (1 << 4))) != 0 ? PC_KEYCODE_FAKE_CTRL : PC_KEYCODE_NOT_A_KEY;
+  usb_reported[1] = (data[0] & (1 << 1)) != 0 ? PC_KEYCODE_FAKE_LEFT_SHIFT : PC_KEYCODE_NOT_A_KEY;
+  usb_reported[2] = (data[0] & (1 << 2)) != 0 ? PC_KEYCODE_FAKE_LEFT_ALT : PC_KEYCODE_NOT_A_KEY;
+  usb_reported[3] = (data[0] & (1 << 3)) != 0 ? PC_KEYCODE_FAKE_LEFT_SUPER : PC_KEYCODE_NOT_A_KEY;
+  usb_reported[4] = (data[0] & (1 << 5)) != 0 ? PC_KEYCODE_FAKE_RIGHT_SHIFT : PC_KEYCODE_NOT_A_KEY;
+  usb_reported[5] = (data[0] & (1 << 6)) != 0 ? PC_KEYCODE_FAKE_RIGHT_ALT : PC_KEYCODE_NOT_A_KEY;
+  usb_reported[6] = (data[0] & (1 << 7)) != 0 ? PC_KEYCODE_FAKE_RIGHT_SUPER : PC_KEYCODE_NOT_A_KEY;
+  // Copy over non-modfier key codes.
+  for (int i = 0; i < 6; i++) {
+    uint8_t pc_code = data[2 + i];
+    if (pc_code == 0x00) {
+      pc_code = PC_KEYCODE_NOT_A_KEY;
     }
+    usb_reported[7 + i] = pc_code;
   }
   // Sort.
-  bubble_sort(data, data_len);
+  bubble_sort(usb_reported, usb_reported_len);
 
   // Sort.
   bubble_sort(down_keys, down_keys_len);
 
-  Serial.printf("down_keys: ");
-  for (int i = 0; i < down_keys_len; i++) {
-    Serial.printf("0x%02x ", down_keys[i]);
-  }
-  Serial.printf("   HID: ");
-  for (int i = 0; i < data_len; i++) {
-    Serial.printf("0x%02x ", data[i]);
-  }
-  Serial.printf("\n");
-
-  // down_keys 0x56   data 0x34    =>  0x34 down
-  // down_keys 0xff   data 0x34    =>  0x34 down
-  // down_keys 0x34   data 0x12    =>  0x12 down
-
-  // down_keys 0x12   data 0x34    =>  0x12 up
-  // down_keys 0x34   data 0x56    =>  0x34 up
-  // down_keys 0x34   data 0xff    =>  0x34 up
+  // Serial.printf("down_keys: ");
+  // for (int i = 0; i < down_keys_len; i++) {
+  //   Serial.printf("0x%02x ", down_keys[i]);
+  // }
+  // Serial.printf("   HID: ");
+  // for (int i = 0; i < usb_reported_len; i++) {
+  //   Serial.printf("0x%02x ", usb_reported[i]);
+  // }
+  // Serial.printf("\n");
 
   // Compare.
   for (int i = 0; i < down_keys_len; i++) {
-    if (down_keys[i] > data[i]) {
+    if (down_keys[i] > usb_reported[i]) {
       // Newly pressed key.
-      send_pc_key_state_change(data[i], 0x00);
+      send_pc_key_state_change(usb_reported[i], 0x00);
       for (int k = down_keys_len - 1; k > i + 1; k--) {
         down_keys[k] = down_keys[k - 1];
       }
-      down_keys[i] = data[i];
-    } else if (down_keys[i] < data[i]) {
+      down_keys[i] = usb_reported[i];
+    } else if (down_keys[i] < usb_reported[i]) {
       // Newly released key.
       send_pc_key_state_change(down_keys[i], 0x80);
       for (int k = i; k < down_keys_len - 1; k++) {
@@ -460,14 +443,12 @@ static void on_usb_keyboard_data(uint8_t usbNum, uint8_t byte_depth, uint8_t* da
     }
   }
 
-  Serial.printf("down_keys: ");
-  for (int i = 0; i < down_keys_len; i++) {
-    Serial.printf("0x%02x ", down_keys[i]);
-  }
-  Serial.printf("\n");
-  Serial.printf("\n");
-
-  // Keyboard.sendReport((KeyReport*)data);
+  // Serial.printf("down_keys: ");
+  // for (int i = 0; i < down_keys_len; i++) {
+  //   Serial.printf("0x%02x ", down_keys[i]);
+  // }
+  // Serial.printf("\n");
+  // Serial.printf("\n");
 }
 
 void bubble_sort(uint8_t arr[], int size) {

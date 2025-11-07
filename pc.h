@@ -99,4 +99,12 @@ static const uint8_t PC_KEYCODE_NUMERIC_9_PAGE_UP = 0x61;
 static const uint8_t PC_KEYCODE_NUMERIC_0_INSERT = 0x62;
 static const uint8_t PC_KEYCODE_NUMERIC_PERIOD = 0x63;
 
+static const uint8_t PC_KEYCODE_FAKE_CTRL = 0x70;
+static const uint8_t PC_KEYCODE_FAKE_LEFT_SHIFT = 0x71;
+static const uint8_t PC_KEYCODE_FAKE_LEFT_ALT = 0x72;
+static const uint8_t PC_KEYCODE_FAKE_LEFT_SUPER = 0x73;
+static const uint8_t PC_KEYCODE_FAKE_RIGHT_SHIFT = 0x74;
+static const uint8_t PC_KEYCODE_FAKE_RIGHT_ALT = 0x75;
+static const uint8_t PC_KEYCODE_FAKE_RIGHT_SUPER = 0x76;
+
 static const uint8_t PC_KEYCODE_NOT_A_KEY = 0xFF;
