@@ -98,3 +98,5 @@ static const uint8_t PC_KEYCODE_NUMERIC_8_CURSOR_UP = 0x60;
 static const uint8_t PC_KEYCODE_NUMERIC_9_PAGE_UP = 0x61;
 static const uint8_t PC_KEYCODE_NUMERIC_0_INSERT = 0x62;
 static const uint8_t PC_KEYCODE_NUMERIC_PERIOD = 0x63;
+
+static const uint8_t PC_KEYCODE_NOT_A_KEY = 0xFF;

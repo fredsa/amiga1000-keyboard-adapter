@@ -1,3 +1,7 @@
+#include <Adafruit_NeoPixel.h>
+
+#include "amiga1000-keyboard-adapter.h"
+
 // https://github.com/tobozo/ESP32-USB-Soft-Host compatibility:
 // - Compiles with `esp32` Espressif SYstems library version 2.0.17
 // - Will not compile version 3.3.3
@@ -15,44 +19,6 @@
 // 2 Vcc (+5V)   - RED
 // 3 KBDATA      - GREEN
 // 4 KBCLK       - YELLOW
-
-#include <Adafruit_NeoPixel.h>
-#include "amiga.h"
-#include "pc.h"
-#include "test_keys.h"
-#include "key_map.h"
-
-#define NEO_RED pixels.Color(20, 0, 0)
-#define NEO_GREEN pixels.Color(0, 20, 0)
-#define NEO_BLUE pixels.Color(0, 0, 20)
-#define NEO_PURPLE pixels.Color(20, 0, 20)
-#define NEO_YELLOW pixels.Color(20, 20, 0)
-#define NEO_OFF pixels.Color(0, 0, 0)
-
-static const uint8_t KBDATA = T11;
-static const uint8_t KBCLK = T10;
-static const uint8_t DEBUG = T9;
-
-// USB Host Part (handles detection and input from the physical keyboard)
-#define DP_P0 A5  // USB Host Data+ Pin (must be an analog pin)
-#define DM_P0 A4  // USB Host Data- Pin (must be an analog pin)
-#define FORCE_TEMPLATED_NOPS
-#include <ESP32-USB-Soft-Host.h>
-
-// Device Part (handles HID device emulation)
-#include "USB.h"
-#include "USBHIDKeyboard.h"  // Keybo
-USBHIDKeyboard Keyboard;
-
-const usb_pins_config_t USB_Pins_Config = {
-  DP_P0, DM_P0,
-  -1, -1,
-  -1, -1,
-  -1, -1
-};
-
-
-bool syncd = false;
 
 Adafruit_NeoPixel pixels(NEOPIXEL_NUM, PIN_NEOPIXEL, NEO_GRB + NEO_KHZ800);
 
@@ -115,120 +81,120 @@ void loop() {
     USH.init(USB_Pins_Config, on_usb_keyboard_detect, on_usb_keyboard_data);
   } else {
     for (int i = 0; i < cmd.length(); i++) {
-      sendChar(cmd[i]);
+      send_typed_char(cmd[i]);
     }
-    send_key_up_down(AMIGA_KEYCODE_RETURN);
+    send_amiga_keycode_up_down(AMIGA_KEYCODE_RETURN);
   }
 }
 
-void sendChar(char c) {
+void send_typed_char(char c) {
   switch (c) {
     case 'A':
     case 'a':
-      send_key_up_down(AMIGA_KEYCODE_A);
+      send_amiga_keycode_up_down(AMIGA_KEYCODE_A);
       break;
     case 'B':
     case 'b':
-      send_key_up_down(AMIGA_KEYCODE_B);
+      send_amiga_keycode_up_down(AMIGA_KEYCODE_B);
       break;
     case 'C':
     case 'c':
-      send_key_up_down(AMIGA_KEYCODE_C);
+      send_amiga_keycode_up_down(AMIGA_KEYCODE_C);
       break;
     case 'D':
     case 'd':
-      send_key_up_down(AMIGA_KEYCODE_D);
+      send_amiga_keycode_up_down(AMIGA_KEYCODE_D);
       break;
     case 'E':
     case 'e':
-      send_key_up_down(AMIGA_KEYCODE_E);
+      send_amiga_keycode_up_down(AMIGA_KEYCODE_E);
       break;
     case 'F':
     case 'f':
-      send_key_up_down(AMIGA_KEYCODE_F);
+      send_amiga_keycode_up_down(AMIGA_KEYCODE_F);
       break;
     case 'G':
     case 'g':
-      send_key_up_down(AMIGA_KEYCODE_G);
+      send_amiga_keycode_up_down(AMIGA_KEYCODE_G);
       break;
     case 'H':
     case 'h':
-      send_key_up_down(AMIGA_KEYCODE_H);
+      send_amiga_keycode_up_down(AMIGA_KEYCODE_H);
       break;
     case 'I':
     case 'i':
-      send_key_up_down(AMIGA_KEYCODE_I);
+      send_amiga_keycode_up_down(AMIGA_KEYCODE_I);
       break;
     case 'J':
     case 'j':
-      send_key_up_down(AMIGA_KEYCODE_J);
+      send_amiga_keycode_up_down(AMIGA_KEYCODE_J);
       break;
     case 'K':
     case 'k':
-      send_key_up_down(AMIGA_KEYCODE_K);
+      send_amiga_keycode_up_down(AMIGA_KEYCODE_K);
       break;
     case 'L':
     case 'l':
-      send_key_up_down(AMIGA_KEYCODE_L);
+      send_amiga_keycode_up_down(AMIGA_KEYCODE_L);
       break;
     case 'M':
     case 'm':
-      send_key_up_down(AMIGA_KEYCODE_M);
+      send_amiga_keycode_up_down(AMIGA_KEYCODE_M);
       break;
     case 'N':
     case 'n':
-      send_key_up_down(AMIGA_KEYCODE_N);
+      send_amiga_keycode_up_down(AMIGA_KEYCODE_N);
       break;
     case 'O':
     case 'o':
-      send_key_up_down(AMIGA_KEYCODE_O);
+      send_amiga_keycode_up_down(AMIGA_KEYCODE_O);
       break;
     case 'P':
     case 'p':
-      send_key_up_down(AMIGA_KEYCODE_P);
+      send_amiga_keycode_up_down(AMIGA_KEYCODE_P);
       break;
     case 'Q':
     case 'q':
-      send_key_up_down(AMIGA_KEYCODE_Q);
+      send_amiga_keycode_up_down(AMIGA_KEYCODE_Q);
       break;
     case 'R':
     case 'r':
-      send_key_up_down(AMIGA_KEYCODE_R);
+      send_amiga_keycode_up_down(AMIGA_KEYCODE_R);
       break;
     case 'S':
     case 's':
-      send_key_up_down(AMIGA_KEYCODE_S);
+      send_amiga_keycode_up_down(AMIGA_KEYCODE_S);
       break;
     case 'T':
     case 't':
-      send_key_up_down(AMIGA_KEYCODE_T);
+      send_amiga_keycode_up_down(AMIGA_KEYCODE_T);
       break;
     case 'U':
     case 'u':
-      send_key_up_down(AMIGA_KEYCODE_U);
+      send_amiga_keycode_up_down(AMIGA_KEYCODE_U);
       break;
     case 'V':
     case 'v':
-      send_key_up_down(AMIGA_KEYCODE_V);
+      send_amiga_keycode_up_down(AMIGA_KEYCODE_V);
       break;
     case 'W':
     case 'w':
-      send_key_up_down(AMIGA_KEYCODE_W);
+      send_amiga_keycode_up_down(AMIGA_KEYCODE_W);
       break;
     case 'X':
     case 'x':
-      send_key_up_down(AMIGA_KEYCODE_X);
+      send_amiga_keycode_up_down(AMIGA_KEYCODE_X);
       break;
     case 'Y':
     case 'y':
-      send_key_up_down(AMIGA_KEYCODE_Y);
+      send_amiga_keycode_up_down(AMIGA_KEYCODE_Y);
       break;
     case 'Z':
     case 'z':
-      send_key_up_down(AMIGA_KEYCODE_Z);
+      send_amiga_keycode_up_down(AMIGA_KEYCODE_Z);
       break;
     case ' ':
-      send_key_up_down(AMIGA_KEYCODE_SPACEBAR);
+      send_amiga_keycode_up_down(AMIGA_KEYCODE_SPACEBAR);
       break;
     default:
       Serial.printf("Unknown char: %c\n", c);
@@ -241,7 +207,7 @@ void neo_color(uint32_t color) {
   pixels.show();
 }
 
-void sync_up() {
+void amiga_sync_up() {
   if (syncd) {
     return;
   }
@@ -256,7 +222,7 @@ void sync_up() {
     pinMode(KBDATA, OUTPUT);
     send_bit(1);
 
-    wait_for_ack();
+    wait_for_amiga_ack();
     if (syncd) {
       Serial.printf("ACK received after %lu attempts.\n", count);
       return;
@@ -270,7 +236,7 @@ void sync_up() {
   }
 }
 
-void wait_for_ack() {
+void wait_for_amiga_ack() {
   digitalWrite(DEBUG, LOW);
   digitalWrite(DEBUG, HIGH);
 
@@ -317,12 +283,12 @@ void print_uptime() {
 // https://github.com/keirf/amiga-stuff
 void do_amiga_test_kit_keyboard_test() {
   // Exit back to main menu.
-  send_keycode(AMIGA_KEYCODE_CTRL);
-  send_keycode(AMIGA_KEYCODE_LEFT_ALT);
+  send_amiga_keycode(AMIGA_KEYCODE_CTRL);
+  send_amiga_keycode(AMIGA_KEYCODE_LEFT_ALT);
   delay(500);
 
   // Enter Amiga Test Kit 1.21 keyboard test.
-  send_key_up_down(AMIGA_KEYCODE_F2);
+  send_amiga_keycode_up_down(AMIGA_KEYCODE_F2);
   delay(1000);
 
   // Send test keys.
@@ -332,14 +298,14 @@ void do_amiga_test_kit_keyboard_test() {
       // Abort.
       return;
     }
-    send_key_up_down(test_keys[i]);
+    send_amiga_keycode_up_down(test_keys[i]);
   }
 
   delay(3000);
 
   // Exit back to main menu.
-  send_keycode(AMIGA_KEYCODE_CTRL);
-  send_keycode(AMIGA_KEYCODE_LEFT_ALT);
+  send_amiga_keycode(AMIGA_KEYCODE_CTRL);
+  send_amiga_keycode(AMIGA_KEYCODE_LEFT_ALT);
   delay(500);
 }
 
@@ -356,14 +322,14 @@ void send_bit(uint8_t bit) {
   digitalWrite(LED_BUILTIN, LOW);
 }
 
-void send_key_up_down(uint8_t keycode) {
-  send_keycode(keycode);
+void send_amiga_keycode_up_down(uint8_t keycode) {
+  send_amiga_keycode(keycode);
   delay(300);
-  send_keycode(keycode | 0x80);
+  send_amiga_keycode(keycode | 0x80);
 }
 
-void send_keycode(uint8_t keycode) {
-  sync_up();
+void send_amiga_keycode(uint8_t keycode) {
+  amiga_sync_up();
 
   neo_color(NEO_BLUE);
   for (int i = 6; i >= 0; i--) {
@@ -376,7 +342,7 @@ void send_keycode(uint8_t keycode) {
 
   digitalWrite(KBDATA, HIGH);
 
-  wait_for_ack();
+  wait_for_amiga_ack();
   if (syncd) {
     Serial.printf("Sent 0x%x, received ACK.\n", keycode);
   } else {
@@ -412,16 +378,18 @@ static void on_usb_keyboard_detect(uint8_t usbNum, void* dev) {
   //   myListenUSBPort = usbNum;
   // }
 
-  static bool usb_dev_begun = false;
-
   if (!usb_dev_begun) {
-    Serial.printf("Starting USB");
+    Serial.println("Starting USB");
     Keyboard.begin();
     USB.begin();
+
+    Serial.printf("down_keys: ");
+    for (int i = 0; i < down_keys_len; i++) {
+      Serial.printf("0x%02x ", down_keys[i]);
+    }
+    Serial.printf("\n");
   }
 }
-
-static uint8_t downkeys[] = { 0, 0, 0, 0, 0 };
 
 static void on_usb_keyboard_data(uint8_t usbNum, uint8_t byte_depth, uint8_t* data, uint8_t data_len) {
   // if( myListenUSBPort != usbNum ) return;
@@ -439,17 +407,89 @@ static void on_usb_keyboard_data(uint8_t usbNum, uint8_t byte_depth, uint8_t* da
   bool right_alt = data[0] && 1 << 6;
   bool right_super = data[0] && 1 << 7;
 
-  handle_key(data[2]);
+  // Filter out all modifier keys.
+  data[0] = PC_KEYCODE_NOT_A_KEY;
+  // Filter out vendor code.
+  data[1] = PC_KEYCODE_NOT_A_KEY;
+  // Prepare for sorting.
+  for (int i = 0; i < data_len; i++) {
+    if (data[i] == 0) {
+      data[i] = PC_KEYCODE_NOT_A_KEY;
+    }
+  }
+  // Sort.
+  bubble_sort(data, data_len);
+
+  // Sort.
+  bubble_sort(down_keys, down_keys_len);
+
+  Serial.printf("down_keys: ");
+  for (int i = 0; i < down_keys_len; i++) {
+    Serial.printf("0x%02x ", down_keys[i]);
+  }
+  Serial.printf("   HID: ");
+  for (int i = 0; i < data_len; i++) {
+    Serial.printf("0x%02x ", data[i]);
+  }
+  Serial.printf("\n");
+
+  // down_keys 0x56   data 0x34    =>  0x34 down
+  // down_keys 0xff   data 0x34    =>  0x34 down
+  // down_keys 0x34   data 0x12    =>  0x12 down
+
+  // down_keys 0x12   data 0x34    =>  0x12 up
+  // down_keys 0x34   data 0x56    =>  0x34 up
+  // down_keys 0x34   data 0xff    =>  0x34 up
+
+  // Compare.
+  for (int i = 0; i < down_keys_len; i++) {
+    if (down_keys[i] > data[i]) {
+      // Newly pressed key.
+      send_pc_key_state_change(data[i], 0x00);
+      for (int k = down_keys_len - 1; k > i + 1; k--) {
+        down_keys[k] = down_keys[k - 1];
+      }
+      down_keys[i] = data[i];
+    } else if (down_keys[i] < data[i]) {
+      // Newly released key.
+      send_pc_key_state_change(down_keys[i], 0x80);
+      for (int k = i; k < down_keys_len - 1; k++) {
+        down_keys[k] = down_keys[k + 1];
+      }
+      down_keys[down_keys_len - 1] = PC_KEYCODE_NOT_A_KEY;
+    }
+  }
+
+  Serial.printf("down_keys: ");
+  for (int i = 0; i < down_keys_len; i++) {
+    Serial.printf("0x%02x ", down_keys[i]);
+  }
+  Serial.printf("\n");
+  Serial.printf("\n");
+
   // Keyboard.sendReport((KeyReport*)data);
 }
 
-void handle_key(uint8_t pccode) {
-  if (!pccode) {
+void bubble_sort(uint8_t arr[], int size) {
+  for (int i = 0; i < size - 1; i++) {
+    for (int j = 0; j < size - i - 1; j++) {
+      if (arr[j] > arr[j + 1]) {
+        // Swap elements
+        uint8_t temp = arr[j];
+        arr[j] = arr[j + 1];
+        arr[j + 1] = temp;
+      }
+    }
+  }
+}
+
+void send_pc_key_state_change(uint8_t pc_code, uint8_t amiga_down_up_mask) {
+  if (pc_code == AMIGA_KEYCODE_NOT_A_KEY) {
     return;
   }
-  uint8_t amigacode = keycode_map[pccode];
-  if (amigacode == AMIGA_KEYCODE_NOT_A_KEY) {
+  uint8_t amiga_code = keycode_map[pc_code];
+  if (amiga_code == AMIGA_KEYCODE_NOT_A_KEY) {
     return;
   }
-  send_key_up_down(amigacode);
+  send_amiga_keycode(amiga_code | amiga_down_up_mask);
 }

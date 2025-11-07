@@ -101,4 +101,5 @@ static const uint8_t AMIGA_KEYCODE_LEFT_ALT = 0x64;
 static const uint8_t AMIGA_KEYCODE_RIGHT_ALT = 0x65;
 static const uint8_t AMIGA_KEYCODE_LEFT_AMIGA = 0x66;
 static const uint8_t AMIGA_KEYCODE_RIGHT_AMIGA = 0x67;
+
 static const uint8_t AMIGA_KEYCODE_NOT_A_KEY = 0xFF;
