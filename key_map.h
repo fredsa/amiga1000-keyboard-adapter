@@ -84,7 +84,9 @@ void init_keycode_map() {
   keycode_map[PC_KEYCODE_FAKE_RIGHT_ALT] = AMIGA_KEYCODE_RIGHT_ALT;
 
   keycode_map[PC_KEYCODE_DEL] = AMIGA_KEYCODE_DEL;
-  keycode_map[PC_KEYCODE_F12] = AMIGA_KEYCODE_HELP;  // F12 => Help
+  // Scroll Lock, F12 => Help
+  keycode_map[PC_KEYCODE_SCROLL_LOCK] = AMIGA_KEYCODE_HELP;
+  keycode_map[PC_KEYCODE_F12] = AMIGA_KEYCODE_HELP;
 
   keycode_map[PC_KEYCODE_CURSOR_UP] = AMIGA_KEYCODE_CURSOR_UP;
   keycode_map[PC_KEYCODE_CURSOR_LEFT] = AMIGA_KEYCODE_CURSOR_LEFT;
