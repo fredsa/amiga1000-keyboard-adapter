@@ -102,4 +102,11 @@ static const uint8_t AMIGA_KEYCODE_RIGHT_ALT = 0x65;
 static const uint8_t AMIGA_KEYCODE_LEFT_AMIGA = 0x66;
 static const uint8_t AMIGA_KEYCODE_RIGHT_AMIGA = 0x67;
 
+static const uint8_t AMIGA_KEYCODE_RESET_WARNING = 0x78;
+static const uint8_t AMIGA_KEYCODE_LAST_KEYCODE_BAD_RETRANSMITTING = 0xF9;
+static const uint8_t AMIGA_KEYCODE_BUFFER_OVERFLOW = 0xFA;
+static const uint8_t AMIGA_KEYCODE_SELF_TEST_FAIL = 0xFC;
+static const uint8_t AMIGA_KEYCODE_INITIATE_POWER_UP_KEY_STREAM = 0xFD;
+static const uint8_t AMIGA_KEYCODE_TERMINATE_POWER_UP_KEY_STREAM = 0xFE;
+
 static const uint8_t AMIGA_KEYCODE_NOT_A_KEY = 0xFF;
