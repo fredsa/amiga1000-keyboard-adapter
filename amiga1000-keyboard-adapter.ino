@@ -429,11 +429,11 @@ static void on_usb_keyboard_data(uint8_t usbNum, uint8_t byte_depth, uint8_t* da
   // Sort.
   bubble_sort(down_keys, down_keys_len);
 
-  // Serial.printf("down_keys: ");
+  // Serial.printf("known down_keys: ");
   // for (int i = 0; i < down_keys_len; i++) {
   //   Serial.printf("0x%02x ", down_keys[i]);
   // }
-  // Serial.printf("   HID: ");
+  // Serial.printf("   usb_reported: ");
   // for (int i = 0; i < usb_reported_len; i++) {
   //   Serial.printf("0x%02x ", usb_reported[i]);
   // }
@@ -444,7 +444,7 @@ static void on_usb_keyboard_data(uint8_t usbNum, uint8_t byte_depth, uint8_t* da
     if (down_keys[i] > usb_reported[i]) {
       // Newly pressed key.
       send_pc_key_state_change(usb_reported[i], 0x00);
-      for (int k = down_keys_len - 1; k > i + 1; k--) {
+      for (int k = down_keys_len - 1; k > i; k--) {
         down_keys[k] = down_keys[k - 1];
       }
       down_keys[i] = usb_reported[i];
@@ -458,7 +458,7 @@ static void on_usb_keyboard_data(uint8_t usbNum, uint8_t byte_depth, uint8_t* da
     }
   }
 
-  // Serial.printf("down_keys: ");
+  // Serial.printf("known down_keys: ");
   // for (int i = 0; i < down_keys_len; i++) {
   //   Serial.printf("0x%02x ", down_keys[i]);
   // }
@@ -493,8 +493,8 @@ void send_pc_key_state_change(uint8_t pc_code, uint8_t amiga_down_up_mask) {
     if (amiga_down_up_mask) {
       return;
     }
-    capslock = !capslock;
-    send_amiga_keycode(capslock ? amiga_code : (amiga_code | 0x80));
+    capslock_on = !capslock_on;
+    send_amiga_keycode(capslock_on ? amiga_code : (amiga_code | 0x80));
     return;
   }
 

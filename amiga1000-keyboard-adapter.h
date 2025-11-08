@@ -36,7 +36,7 @@ static const uint8_t DEBUG = T9;
 
 static bool usb_dev_begun = false;
 static bool syncd = false;
-static bool capslock = false;
+static bool capslock_on = false;
 static bool ctrl_amiga_amiga = false;
 static uint8_t keybd_dev_addr = 0xff;
 
