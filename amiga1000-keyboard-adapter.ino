@@ -487,6 +487,17 @@ void send_pc_key_state_change(uint8_t pc_code, uint8_t amiga_down_up_mask) {
   if (amiga_code == AMIGA_KEYCODE_NOT_A_KEY) {
     return;
   }
+
+  // http://amigadev.elowar.com/read/ADCD_2.1/Hardware_Manual_guide/node0175.html
+  if (amiga_code == AMIGA_KEYCODE_CAPS_LOCK) {
+    if (amiga_down_up_mask) {
+      return;
+    }
+    capslock = !capslock;
+    send_amiga_keycode(capslock ? amiga_code : (amiga_code | 0x80));
+    return;
+  }
+
   send_amiga_keycode(amiga_code | amiga_down_up_mask);
 }
 
