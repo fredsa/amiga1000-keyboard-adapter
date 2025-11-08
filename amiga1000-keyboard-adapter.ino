@@ -43,6 +43,12 @@ void setup() {
 
   // Configure keyboard.
   init_keycode_map();
+  for (int i = 0; i < pc_down_keys_len; i++) {
+    pc_down_keys[i] = false;
+  }
+
+  // Configure queue to buffer inter-process communication.
+  xQueue = xQueueCreate(10, sizeof(uint8_t) * KEYBOARD_REPORT_SIZE);
 
   // Configure digital pins.
   pinMode(KBCLK, OUTPUT);
@@ -68,6 +74,7 @@ void setup() {
 }
 
 void loop() {
+  process_usb_keyboard_data();
 }
 
 void neo_color(uint32_t color) {
@@ -82,7 +89,6 @@ void amiga_sync_up() {
 
   print_uptime();
   Serial.println("\nSyncing...");
-  Serial.flush();
 
   unsigned long count = 0;
   while (true) {
@@ -90,7 +96,7 @@ void amiga_sync_up() {
     pinMode(KBDATA, OUTPUT);
     send_bit(1);
 
-    wait_for_amiga_ack();
+    wait_for_amiga_ack(true);
     if (syncd) {
       Serial.printf("ACK received after %lu attempts.\n", count);
       return;
@@ -104,16 +110,18 @@ void amiga_sync_up() {
   }
 }
 
-void wait_for_amiga_ack() {
+void wait_for_amiga_ack(bool debug) {
   digitalWrite(DEBUG, LOW);
   digitalWrite(DEBUG, HIGH);
 
   pinMode(KBDATA, INPUT);
-  int lowafter = wait_for_state(KBDATA, LOW, 500);
+  int lowafter = wait_for_state(KBDATA, LOW, AMIGA_ACK_LOW_TIMEOUT_MS * 1000);
   if (lowafter != -1) {
-    int highafter = wait_for_state(KBDATA, HIGH, 500);
+    int highafter = wait_for_state(KBDATA, HIGH, AMIGA_ACK_HIGH_TIMEOUT_MS * 1000);
     if (highafter != -1) {
-      // Serial.printf("Got sync LOW after %i us, HIGH after %i us.\n", lowafter, highafter);
+      if (debug) {
+        Serial.printf("Got sync LOW after %i us, HIGH after %i us.\n", lowafter, highafter);
+      }
       set_syncd(true);
       return;
     }
@@ -191,30 +199,33 @@ void send_bit(uint8_t bit) {
 }
 
 void send_amiga_keycode_up_down(uint8_t keycode) {
-  send_amiga_keycode(keycode);
+  send_amiga_keycode(keycode | AMIGA_KEYCODE_BITMASK_PRESS);
   delay(300);
-  send_amiga_keycode(keycode | 0x80);
+  send_amiga_keycode(keycode | AMIGA_KEYCODE_BITMASK_RELEASE);
 }
 
 void send_amiga_keycode(uint8_t keycode) {
-  amiga_sync_up();
+  while (true) {
+    amiga_sync_up();
 
-  neo_color(NEO_BLUE);
-  for (int i = 6; i >= 0; i--) {
-    uint8_t bit = (keycode >> i) & 0x01;
+    neo_color(NEO_BLUE);
+    for (int i = 6; i >= 0; i--) {
+      uint8_t bit = (keycode >> i) & 0x01;
+      send_bit(bit);
+    }
+
+    uint8_t bit = keycode >> 7;
     send_bit(bit);
-  }
 
-  uint8_t bit = keycode >> 7;
-  send_bit(bit);
+    digitalWrite(KBDATA, HIGH);
 
-  digitalWrite(KBDATA, HIGH);
-
-  wait_for_amiga_ack();
-  if (syncd) {
-    Serial.printf("Sent Amiga 0x%02x, received ACK.\n", keycode);
-  } else {
-    Serial.printf("Sent Amiga 0x%02x, NO ACK!\n", keycode);
+    wait_for_amiga_ack(false);
+    if (syncd) {
+      Serial.printf("Sent Amiga 0x%02x, received ACK.\n", keycode);
+      return;
+    } else {
+      Serial.printf("Sent Amiga 0x%02x, NO ACK! RETRYING...\n", keycode);
+    }
   }
 }
 
@@ -253,14 +264,40 @@ static void on_usb_keyboard_detect(uint8_t usbNum, void* dev) {
 
 static void on_usb_keyboard_data(uint8_t usbNum, uint8_t byte_depth, uint8_t* data, uint8_t data_len) {
   // Forward data to microcontroller USB bus.
-  // Keyboard.sendReport((KeyReport*)data);
+  Keyboard.sendReport((KeyReport*)data);
 
-  Serial.printf("on_usb_keyboard_data: ");
-  for (int k = 0; k < data_len; k++) {
+  if (data_len != KEYBOARD_REPORT_SIZE) {
+    Serial.printf("ERROR: Received keyboard report of unexpected length: %i\n", data_len);
+    for (int k = 0; k < data_len; k++) {
+      if (k == 2) { Serial.printf(" "); }
+      Serial.printf("0x%02x ", data[k]);
+    }
+    Serial.printf("\n");
+    return;
+  }
+
+  xQueueSend(xQueue, data, 0);
+}
+
+static void process_usb_keyboard_data() {
+  uint8_t data[KEYBOARD_REPORT_SIZE];
+  if (xQueueReceive(xQueue, &data, 0) != pdTRUE) {
+    return;
+  }
+
+#ifdef DEBUG_USB_DATA
+  Serial.printf("process_usb_keyboard_data: ");
+  for (int k = 0; k < KEYBOARD_REPORT_SIZE; k++) {
     if (k == 2) { Serial.printf(" "); }
     Serial.printf("0x%02x ", data[k]);
   }
   Serial.printf("\n");
+#endif
+
+  if (data[2] == PC_KEYCODE_TOO_MANY_KEYS && data[3] == PC_KEYCODE_TOO_MANY_KEYS && data[4] == PC_KEYCODE_TOO_MANY_KEYS && data[5] == PC_KEYCODE_TOO_MANY_KEYS && data[6] == PC_KEYCODE_TOO_MANY_KEYS && data[7] == PC_KEYCODE_TOO_MANY_KEYS) {
+    Serial.printf("ERROR: Keyboard reports too many keys pressed\n");
+    return;
+  }
 
   // Populate fake PC key codes for modifier keys.
   usb_reported[0] = (data[0] & ((1 << 0) | (1 << 4))) != 0 ? PC_KEYCODE_FAKE_CTRL : PC_KEYCODE_NOT_A_KEY;
@@ -271,12 +308,8 @@ static void on_usb_keyboard_data(uint8_t usbNum, uint8_t byte_depth, uint8_t* da
   usb_reported[5] = (data[0] & (1 << 6)) != 0 ? PC_KEYCODE_FAKE_RIGHT_ALT : PC_KEYCODE_NOT_A_KEY;
   usb_reported[6] = (data[0] & (1 << 7)) != 0 ? PC_KEYCODE_FAKE_RIGHT_SUPER : PC_KEYCODE_NOT_A_KEY;
   // Copy over non-modfier key codes.
-  for (int i = 0; i < 6; i++) {
-    uint8_t pc_code = data[2 + i];
-    if (pc_code == 0x00) {
-      pc_code = PC_KEYCODE_NOT_A_KEY;
-    }
-    usb_reported[7 + i] = pc_code;
+  for (int i = 0; i < KEYBOARD_REPORT_SIZE - 2; i++) {
+    usb_reported[7 + i] = data[2 + i];
   }
 
   // Check for CTRL-SUPER-SUPER.
@@ -292,60 +325,62 @@ static void on_usb_keyboard_data(uint8_t usbNum, uint8_t byte_depth, uint8_t* da
     return;
   }
 
-  // Sort.
-  bubble_sort(usb_reported, usb_reported_len);
+#ifdef DEBUG_USB_DATA
+  Serial.printf("<< known pc_down_keys: ");
+  for (int i = 0; i < pc_down_keys_len; i++) {
+    if (pc_down_keys[i]) {
+      Serial.printf("0x%02x ", i);
+    }
+  }
+  Serial.printf("   usb_reported: ");
+  for (int i = 0; i < usb_reported_len; i++) {
+    Serial.printf("0x%02x ", usb_reported[i]);
+  }
+  Serial.printf("\n");
+#endif
 
-  // Sort.
-  bubble_sort(down_keys, down_keys_len);
-
-  // Serial.printf("<< known down_keys: ");
-  // for (int i = 0; i < down_keys_len; i++) {
-  //   Serial.printf("0x%02x ", down_keys[i]);
-  // }
-  // Serial.printf("   usb_reported: ");
-  // for (int i = 0; i < usb_reported_len; i++) {
-  //   Serial.printf("0x%02x ", usb_reported[i]);
-  // }
-  // Serial.printf("\n");
-
-  // Compare known down_keys with usb_reported down keys.
-  for (int i = 0; i < down_keys_len; i++) {
-    if (down_keys[i] > usb_reported[i]) {
-      // Newly pressed key.
-      send_pc_key_state_change(usb_reported[i], 0x00);
-      for (int k = down_keys_len - 1; k > i; k--) {
-        down_keys[k] = down_keys[k - 1];
+  // Process newly released keys.
+  for (int i = 0; i < pc_down_keys_len; i++) {
+    if (i == PC_KEYCODE_NOT_A_KEY) {
+      continue;
+    }
+    bool found = false;
+    if (pc_down_keys[i]) {
+      for (int k = 0; k < usb_reported_len; k++) {
+        if (usb_reported[k] == i) {
+          found = true;
+          break;
+        }
       }
-      down_keys[i] = usb_reported[i];
-    } else if (down_keys[i] < usb_reported[i]) {
-      // Newly released key.
-      send_pc_key_state_change(down_keys[i], 0x80);
-      for (int k = i; k < down_keys_len - 1; k++) {
-        down_keys[k] = down_keys[k + 1];
+      if (!found) {
+        pc_down_keys[i] = false;
+        send_pc_key_state_change(i, AMIGA_KEYCODE_BITMASK_RELEASE);
       }
-      down_keys[down_keys_len - 1] = PC_KEYCODE_NOT_A_KEY;
     }
   }
 
-  // Serial.printf(">> known down_keys: ");
-  // for (int i = 0; i < down_keys_len; i++) {
-  //   Serial.printf("0x%02x ", down_keys[i]);
-  // }
-  // Serial.printf("\n");
-  // Serial.printf("\n");
-}
-
-void bubble_sort(uint8_t arr[], int size) {
-  for (int i = 0; i < size - 1; i++) {
-    for (int j = 0; j < size - i - 1; j++) {
-      if (arr[j] > arr[j + 1]) {
-        // Swap elements
-        uint8_t temp = arr[j];
-        arr[j] = arr[j + 1];
-        arr[j + 1] = temp;
-      }
+  // Process newly pressed keys.
+  for (int i = 0; i < usb_reported_len; i++) {
+    uint8_t pc_keycode = usb_reported[i];
+    if (pc_keycode == PC_KEYCODE_NOT_A_KEY) {
+      continue;
+    }
+    if (!pc_down_keys[pc_keycode]) {
+      pc_down_keys[pc_keycode] = true;
+      send_pc_key_state_change(pc_keycode, AMIGA_KEYCODE_BITMASK_PRESS);
     }
   }
+
+#ifdef DEBUG_USB_DATA
+  Serial.printf(">> known pc_down_keys: ");
+  for (int i = 0; i < pc_down_keys_len; i++) {
+    if (pc_down_keys[i]) {
+      Serial.printf("0x%02x ", i);
+    }
+  }
+  Serial.printf("\n");
+  Serial.printf("\n");
+#endif
 }
 
 void send_pc_key_state_change(uint8_t pc_code, uint8_t amiga_down_up_mask) {
@@ -363,7 +398,9 @@ void send_pc_key_state_change(uint8_t pc_code, uint8_t amiga_down_up_mask) {
       return;
     }
     capslock_on = !capslock_on;
-    send_amiga_keycode(capslock_on ? amiga_code : (amiga_code | 0x80));
+    send_amiga_keycode(amiga_code | (capslock_on ? AMIGA_KEYCODE_BITMASK_PRESS : AMIGA_KEYCODE_BITMASK_RELEASE));
+    // uint8_t leds_data = capslock_on ? LED_CAPSLOCK : 0x00;
+    // USH.sendReport(keybd_dev_addr, leds_data, sizeof(leds_data));
     return;
   }
 

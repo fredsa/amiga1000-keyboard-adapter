@@ -1,4 +1,7 @@
 // http://amigadev.elowar.com/read/ADCD_2.1/Hardware_Manual_guide/node017A.html
+static const uint8_t AMIGA_KEYCODE_BITMASK_RELEASE = 0x80;
+static const uint8_t AMIGA_KEYCODE_BITMASK_PRESS = 0x00;
+
 static const uint8_t AMIGA_KEYCODE_BACKTICK_TILDE = 0x00;
 static const uint8_t AMIGA_KEYCODE_1_EXCLAMATION = 0x01;
 static const uint8_t AMIGA_KEYCODE_2_AT_SIGN = 0x02;

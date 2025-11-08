@@ -1,3 +1,8 @@
+static const uint8_t PC_KEYCODE_NOT_A_KEY = 0x00;
+
+// Keyboard report: 0x00 0x00 0x01 0x01 0x01 0x01 0x01 0x01
+static const uint8_t PC_KEYCODE_TOO_MANY_KEYS = 0x01;
+
 static const uint8_t PC_KEYCODE_A = 0x04;
 static const uint8_t PC_KEYCODE_B = 0x05;
 static const uint8_t PC_KEYCODE_C = 0x06;
@@ -106,5 +111,3 @@ static const uint8_t PC_KEYCODE_FAKE_LEFT_SUPER = 0x73;
 static const uint8_t PC_KEYCODE_FAKE_RIGHT_SHIFT = 0x74;
 static const uint8_t PC_KEYCODE_FAKE_RIGHT_ALT = 0x75;
 static const uint8_t PC_KEYCODE_FAKE_RIGHT_SUPER = 0x76;
-
-static const uint8_t PC_KEYCODE_NOT_A_KEY = 0xFF;
