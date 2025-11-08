@@ -3,11 +3,11 @@
 #include "amiga1000-keyboard-adapter.h"
 
 // https://github.com/tobozo/ESP32-USB-Soft-Host compatibility:
-// - Compiles with `esp32` Espressif SYstems library version 2.0.17
+// - Compiles with `esp32` Espressif Systems library version 2.0.17
 // - Will not compile version 3.3.3
 
 #if !defined CONFIG_IDF_TARGET_ESP32S3 && !defined CONFIG_IDF_TARGET_ESP32S2
-#error "This sketch will only run on ESP32-S2 or S3"
+#error "This sketch will only run on ESP32-S2 or ESP32-S3"
 #endif
 
 #if ARDUINO_USB_MODE
