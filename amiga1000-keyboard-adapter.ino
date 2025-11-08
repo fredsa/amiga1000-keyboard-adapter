@@ -212,9 +212,9 @@ void send_amiga_keycode(uint8_t keycode) {
 
   wait_for_amiga_ack();
   if (syncd) {
-    Serial.printf("Sent 0x%x, received ACK.\n", keycode);
+    Serial.printf("Sent Amiga 0x%02x, received ACK.\n", keycode);
   } else {
-    Serial.printf("Sent 0x%x, NO ACK!\n", keycode);
+    Serial.printf("Sent Amiga 0x%02x, NO ACK!\n", keycode);
   }
 }
 
@@ -255,8 +255,9 @@ static void on_usb_keyboard_data(uint8_t usbNum, uint8_t byte_depth, uint8_t* da
   // Forward data to microcontroller USB bus.
   // Keyboard.sendReport((KeyReport*)data);
 
-  Serial.printf("in: ");
+  Serial.printf("on_usb_keyboard_data: ");
   for (int k = 0; k < data_len; k++) {
+    if (k == 2) { Serial.printf(" "); }
     Serial.printf("0x%02x ", data[k]);
   }
   Serial.printf("\n");
@@ -297,7 +298,7 @@ static void on_usb_keyboard_data(uint8_t usbNum, uint8_t byte_depth, uint8_t* da
   // Sort.
   bubble_sort(down_keys, down_keys_len);
 
-  // Serial.printf("known down_keys: ");
+  // Serial.printf("<< known down_keys: ");
   // for (int i = 0; i < down_keys_len; i++) {
   //   Serial.printf("0x%02x ", down_keys[i]);
   // }
@@ -326,7 +327,7 @@ static void on_usb_keyboard_data(uint8_t usbNum, uint8_t byte_depth, uint8_t* da
     }
   }
 
-  // Serial.printf("known down_keys: ");
+  // Serial.printf(">> known down_keys: ");
   // for (int i = 0; i < down_keys_len; i++) {
   //   Serial.printf("0x%02x ", down_keys[i]);
   // }
