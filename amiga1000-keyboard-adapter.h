@@ -35,14 +35,16 @@ static const uint8_t KBCLK = T10;
 static const uint8_t DEBUG = T9;
 
 static bool usb_dev_begun = false;
-
-bool syncd = false;
+static bool syncd = false;
+static bool capslock = false;
+static bool ctrl_amiga_amiga = false;
+static uint8_t keybd_dev_addr = 0xff;
 
 // USB HID supports up to 6 regular keys pressed simultaneously.
 static uint8_t down_keys[] = { PC_KEYCODE_NOT_A_KEY, PC_KEYCODE_NOT_A_KEY, PC_KEYCODE_NOT_A_KEY, PC_KEYCODE_NOT_A_KEY, PC_KEYCODE_NOT_A_KEY, PC_KEYCODE_NOT_A_KEY };
-int down_keys_len = sizeof(down_keys) / sizeof(down_keys[0]);
+const int down_keys_len = sizeof(down_keys) / sizeof(down_keys[0]);
 
 // USB HID supports up to 6 regular keys pressed simultaneously, plus 7 modifier keys we track.
 static uint8_t usb_reported[] = { PC_KEYCODE_NOT_A_KEY, PC_KEYCODE_NOT_A_KEY, PC_KEYCODE_NOT_A_KEY, PC_KEYCODE_NOT_A_KEY, PC_KEYCODE_NOT_A_KEY, PC_KEYCODE_NOT_A_KEY,
                                   PC_KEYCODE_NOT_A_KEY, PC_KEYCODE_NOT_A_KEY, PC_KEYCODE_NOT_A_KEY, PC_KEYCODE_NOT_A_KEY, PC_KEYCODE_NOT_A_KEY, PC_KEYCODE_NOT_A_KEY, PC_KEYCODE_NOT_A_KEY };
-int usb_reported_len = sizeof(usb_reported) / sizeof(usb_reported[0]);
+const int usb_reported_len = sizeof(usb_reported) / sizeof(usb_reported[0]);

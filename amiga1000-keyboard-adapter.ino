@@ -380,6 +380,7 @@ static void on_usb_keyboard_detect(uint8_t usbNum, void* dev) {
     Keyboard.begin();
     USB.begin();
   }
+  keybd_dev_addr = usbNum;
 }
 
 static void on_usb_keyboard_data(uint8_t usbNum, uint8_t byte_depth, uint8_t* data, uint8_t data_len) {
@@ -408,6 +409,20 @@ static void on_usb_keyboard_data(uint8_t usbNum, uint8_t byte_depth, uint8_t* da
     }
     usb_reported[7 + i] = pc_code;
   }
+
+  // Check for CTRL-SUPER-SUPER.
+  // http://amigadev.elowar.com/read/ADCD_2.1/Hardware_Manual_guide/node0178.html
+  bool reset_keys = usb_reported[0] != PC_KEYCODE_NOT_A_KEY && usb_reported[3] != PC_KEYCODE_NOT_A_KEY && usb_reported[6] != PC_KEYCODE_NOT_A_KEY;
+  if (reset_keys | ctrl_amiga_amiga) {
+    ctrl_amiga_amiga = reset_keys;
+    send_amiga_hard_reset(ctrl_amiga_amiga);
+  }
+
+  // Don't send key data while reset keys are being held.
+  if (ctrl_amiga_amiga) {
+    return;
+  }
+
   // Sort.
   bubble_sort(usb_reported, usb_reported_len);
 
@@ -424,7 +439,7 @@ static void on_usb_keyboard_data(uint8_t usbNum, uint8_t byte_depth, uint8_t* da
   // }
   // Serial.printf("\n");
 
-  // Compare.
+  // Compare known down_keys with usb_reported down keys.
   for (int i = 0; i < down_keys_len; i++) {
     if (down_keys[i] > usb_reported[i]) {
       // Newly pressed key.
@@ -473,4 +488,9 @@ void send_pc_key_state_change(uint8_t pc_code, uint8_t amiga_down_up_mask) {
     return;
   }
   send_amiga_keycode(amiga_code | amiga_down_up_mask);
+}
+
+// http://amigadev.elowar.com/read/ADCD_2.1/Hardware_Manual_guide/node0179.html
+void send_amiga_hard_reset(bool reset_keys_held) {
+  digitalWrite(KBCLK, reset_keys_held ? LOW : HIGH);
 }
