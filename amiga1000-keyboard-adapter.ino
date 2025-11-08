@@ -399,8 +399,6 @@ void send_pc_key_state_change(uint8_t pc_code, uint8_t amiga_down_up_mask) {
     }
     capslock_on = !capslock_on;
     send_amiga_keycode(amiga_code | (capslock_on ? AMIGA_KEYCODE_BITMASK_PRESS : AMIGA_KEYCODE_BITMASK_RELEASE));
-    // uint8_t leds_data = capslock_on ? LED_CAPSLOCK : 0x00;
-    // USH.sendReport(keybd_dev_addr, leds_data, sizeof(leds_data));
     return;
   }
 
