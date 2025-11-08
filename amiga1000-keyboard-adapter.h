@@ -12,6 +12,7 @@
 #undef DEBUG_USB_DATA
 
 #define KEYBOARD_REPORT_SIZE 8
+#define KEYBOARD_REPORT_QUEUE_SIZE 20
 
 // http://amigadev.elowar.com/read/ADCD_2.1/Hardware_Manual_guide/node0176.html
 #define AMIGA_ACK_LOW_TIMEOUT_MS 145 // Slightly more than 143ms.

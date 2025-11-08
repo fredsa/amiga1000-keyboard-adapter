@@ -48,7 +48,7 @@ void setup() {
   }
 
   // Configure queue to buffer inter-process communication.
-  xQueue = xQueueCreate(10, sizeof(uint8_t) * KEYBOARD_REPORT_SIZE);
+  xQueue = xQueueCreate(KEYBOARD_REPORT_QUEUE_SIZE, sizeof(uint8_t) * KEYBOARD_REPORT_SIZE);
 
   // Configure digital pins.
   pinMode(KBCLK, OUTPUT);
