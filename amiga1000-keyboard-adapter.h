@@ -42,6 +42,7 @@
 #define PIN_AMIGA_KBCLK T10
 #define PIN_AMIGA_KBDATA T11
 
+// ** Have NOT gotten this to work on ESP32-S2! **
 // Adafruit QT Py ESP32-S2
 // https://learn.adafruit.com/adafruit-qt-py-esp32-s2
 // #define PIN_USB_DATA_MINUS A2  // USB Host Data- Pin (must be an analog pin)
