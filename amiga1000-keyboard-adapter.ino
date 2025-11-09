@@ -1,4 +1,6 @@
+#ifdef NEOPIXEL_NUM
 #include <Adafruit_NeoPixel.h>
+#endif
 
 #include "amiga1000-keyboard-adapter.h"
 
@@ -14,13 +16,9 @@
 #error "This sketch should be used when USB is in OTG mode"
 #endif
 
-// Amiga 1000 keyboard connector
-// 1 GND         - BLACK
-// 2 Vcc (+5V)   - RED
-// 3 KBDATA      - GREEN
-// 4 KBCLK       - YELLOW
-
+#ifdef NEOPIXEL_NUM
 Adafruit_NeoPixel pixels(NEOPIXEL_NUM, PIN_NEOPIXEL, NEO_GRB + NEO_KHZ800);
+#endif
 
 void setup() {
   // Blink main LED.
@@ -32,12 +30,15 @@ void setup() {
     delay(100);
   }
 
+#ifdef NEOPIXEL_NUM
   // Configure neopixel.
   pixels.begin();
   neo_color(NEO_PURPLE);
+#endif
 
   // Configure serial.
   Serial.begin();
+
   Serial.println("Settting up...");
   Serial.println();
 
@@ -51,12 +52,10 @@ void setup() {
   xQueue = xQueueCreate(KEYBOARD_REPORT_QUEUE_SIZE, sizeof(uint8_t) * KEYBOARD_REPORT_SIZE);
 
   // Configure digital pins.
-  pinMode(KBCLK, OUTPUT);
-  pinMode(KBDATA, OUTPUT);
-  pinMode(DEBUG, OUTPUT);
-  digitalWrite(KBCLK, HIGH);
-  digitalWrite(KBDATA, HIGH);
-  digitalWrite(DEBUG, HIGH);
+  pinMode(PIN_AMIGA_KBCLK, OUTPUT);
+  pinMode(PIN_AMIGA_KBDATA, OUTPUT);
+  digitalWrite(PIN_AMIGA_KBCLK, HIGH);
+  digitalWrite(PIN_AMIGA_KBDATA, HIGH);
 
   // Configure USB host.
   USH.setOnConfigDescCB(Default_USB_ConfigDescCB);
@@ -70,17 +69,21 @@ void setup() {
   Serial.println("Setup complete.");
   Serial.flush();
 
+#ifdef NEOPIXEL_NUM
   neo_color(NEO_YELLOW);
+#endif
 }
 
 void loop() {
   process_usb_keyboard_data();
 }
 
+#ifdef NEOPIXEL_NUM
 void neo_color(uint32_t color) {
   pixels.setPixelColor(0, color);
   pixels.show();
 }
+#endif
 
 void amiga_sync_up() {
   if (syncd) {
@@ -93,7 +96,7 @@ void amiga_sync_up() {
   unsigned long count = 0;
   while (true) {
     count++;
-    pinMode(KBDATA, OUTPUT);
+    pinMode(PIN_AMIGA_KBDATA, OUTPUT);
     send_bit(1);
 
     wait_for_amiga_ack(true);
@@ -111,13 +114,10 @@ void amiga_sync_up() {
 }
 
 void wait_for_amiga_ack(bool debug) {
-  digitalWrite(DEBUG, LOW);
-  digitalWrite(DEBUG, HIGH);
-
-  pinMode(KBDATA, INPUT);
-  int lowafter = wait_for_state(KBDATA, LOW, AMIGA_ACK_LOW_TIMEOUT_MS * 1000);
+  pinMode(PIN_AMIGA_KBDATA, INPUT);
+  int lowafter = wait_for_state(PIN_AMIGA_KBDATA, LOW, AMIGA_ACK_LOW_TIMEOUT_MS * 1000);
   if (lowafter != -1) {
-    int highafter = wait_for_state(KBDATA, HIGH, AMIGA_ACK_HIGH_TIMEOUT_MS * 1000);
+    int highafter = wait_for_state(PIN_AMIGA_KBDATA, HIGH, AMIGA_ACK_HIGH_TIMEOUT_MS * 1000);
     if (highafter != -1) {
       if (debug) {
         Serial.printf("Got sync LOW after %i us, HIGH after %i us.\n", lowafter, highafter);
@@ -188,12 +188,12 @@ void do_amiga_test_kit_keyboard_test() {
 // http://amigadev.elowar.com/read/ADCD_2.1/Hardware_Manual_guide/node0173.html
 void send_bit(uint8_t bit) {
   digitalWrite(LED_BUILTIN, HIGH);
-  pinMode(KBDATA, OUTPUT);
-  digitalWrite(KBDATA, !bit);  // Active low.
+  pinMode(PIN_AMIGA_KBDATA, OUTPUT);
+  digitalWrite(PIN_AMIGA_KBDATA, !bit);  // Active low.
   delayMicroseconds(20);
-  digitalWrite(KBCLK, LOW);
+  digitalWrite(PIN_AMIGA_KBCLK, LOW);
   delayMicroseconds(20);
-  digitalWrite(KBCLK, HIGH);
+  digitalWrite(PIN_AMIGA_KBCLK, HIGH);
   delayMicroseconds(20);
   digitalWrite(LED_BUILTIN, LOW);
 }
@@ -208,7 +208,9 @@ void send_amiga_keycode(uint8_t keycode) {
   while (true) {
     amiga_sync_up();
 
+#ifdef NEOPIXEL_NUM
     neo_color(NEO_BLUE);
+#endif
     for (int i = 6; i >= 0; i--) {
       uint8_t bit = (keycode >> i) & 0x01;
       send_bit(bit);
@@ -217,7 +219,7 @@ void send_amiga_keycode(uint8_t keycode) {
     uint8_t bit = keycode >> 7;
     send_bit(bit);
 
-    digitalWrite(KBDATA, HIGH);
+    digitalWrite(PIN_AMIGA_KBDATA, HIGH);
 
     wait_for_amiga_ack(false);
     if (syncd) {
@@ -231,11 +233,13 @@ void send_amiga_keycode(uint8_t keycode) {
 
 void set_syncd(bool state) {
   syncd = state;
+#ifdef NEOPIXEL_NUM
   if (syncd) {
     neo_color(NEO_OFF);
   } else {
     neo_color(NEO_RED);
   }
+#endif
 }
 
 static void on_usb_keyboard_detect(uint8_t usbNum, void* dev) {
@@ -407,5 +411,5 @@ void send_pc_key_state_change(uint8_t pc_code, uint8_t amiga_down_up_mask) {
 
 // http://amigadev.elowar.com/read/ADCD_2.1/Hardware_Manual_guide/node0179.html
 void send_amiga_hard_reset(bool reset_keys_held) {
-  digitalWrite(KBCLK, reset_keys_held ? LOW : HIGH);
+  digitalWrite(PIN_AMIGA_KBCLK, reset_keys_held ? LOW : HIGH);
 }
